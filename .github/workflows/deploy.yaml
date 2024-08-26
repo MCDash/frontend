@@ -1,0 +1,46 @@
+name: Сборка приложения и деплой
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+    branches:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Синхронизация кода
+        uses: actions/checkout@v4
+      - name: Установка зависимостей
+        run: yarn install
+      - name: Сборка приложения
+        run: yarn build
+      - name: Выгрузка артефакта
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: build/
+  deploy:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+    steps:
+      - name: Выгрузка артефакта
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: build/
+      - name: Установка SSH ключа
+        run: |
+          eval $(ssh-agent -s)
+          mkdir -p ~/.ssh
+          ssh-keyscan -t ecdsa ${{ vars.VM_PUBLIC_IP }} >> ~/.ssh/known_hosts
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 700 ~/.ssh/id_rsa
+          ssh-add ~/.ssh/id_rsa
+      - name: Размещение сборки на ВМ
+        run: |
+          tar -czf - -C ./build . | ssh ${{ vars.VM_USER_SHELL }}@${{ vars.VM_PUBLIC_IP }} "rm -rf ${{ vars.VM_NGINX_PATH }}/* && tar -xzf - -C ${{ vars.VM_NGINX_PATH }}/"
