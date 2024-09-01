@@ -1,10 +1,11 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
+const Dotenv = require('dotenv-webpack');
 
 module.exports = {
   output: {
-    path: path.resolve(__dirname, 'build'),
-    filename: 'bundle.js',
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'index.js',
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
@@ -14,8 +15,14 @@ module.exports = {
     },
   },
   plugins: [
+    new Dotenv({
+      path: path.join(__dirname, '.env'),
+    }),
     new HtmlWebpackPlugin({
-      template: './src/index.html',
+      template: path.join(__dirname, 'public', 'index.html'),
+      templateParameters: {
+        PUBLIC_URL: process.env.PUBLIC_URL,
+      },
     }),
   ],
   module: {
