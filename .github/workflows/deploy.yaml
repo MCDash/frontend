@@ -22,7 +22,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dist
-          path: build/
+          path: dist/
   deploy:
     runs-on: ubuntu-latest
     needs:
@@ -32,7 +32,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: dist
-          path: build/
+          path: dist/
       - name: Установка SSH ключа
         run: |
           eval $(ssh-agent -s)
@@ -43,4 +43,4 @@ jobs:
           ssh-add ~/.ssh/id_rsa
       - name: Размещение сборки на ВМ
         run: |
-          tar -czf - -C ./build . | ssh ${{ vars.VM_USER_SHELL }}@${{ vars.VM_PUBLIC_IP }} "rm -rf ${{ vars.VM_NGINX_PATH }}/* && tar -xzf - -C ${{ vars.VM_NGINX_PATH }}/"
+          tar -czf - -C ./dist . | ssh ${{ vars.VM_USER_SHELL }}@${{ vars.VM_PUBLIC_IP }} "rm -rf ${{ vars.VM_NGINX_PATH }}/* && tar -xzf - -C ${{ vars.VM_NGINX_PATH }}/"
